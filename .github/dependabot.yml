@@ -1,0 +1,81 @@
+{
+    "settings": {
+        "commitMessage": "vault backup: {{date}}",
+        "autoCommitMessage": "vault backup: {{date}}",
+        "commitMessageScript": "",
+        "commitDateFormat": "YYYY-MM-DD HH:mm:ss",
+        "autoSaveInterval": 0,
+        "autoPushInterval": 0,
+        "autoPullInterval": 0,
+        "autoPullOnBoot": false,
+        "autoCommitOnlyStaged": false,
+        "disablePush": false,
+        "pullBeforePush": true,
+        "squashCommitsBeforePush": false,
+        "disablePopups": false,
+        "showErrorNotices": true,
+        "disablePopupsForNoChanges": false,
+        "listChangedFilesInMessageBody": false,
+        "showStatusBar": true,
+        "updateSubmodules": false,
+        "syncMethod": "merge",
+        "mergeStrategy": "none",
+        "customMessageOnAutoBackup": false,
+        "autoBackupAfterFileChange": false,
+        "treeStructure": true,
+        "refreshSourceControl": true,
+        "basePath": "",
+        "differentIntervalCommitAndPush": false,
+        "changedFilesInStatusBar": true,
+        "showedMobileNotice": true,
+        "refreshSourceControlTimer": 7000,
+        "showBranchStatusBar": true,
+        "setLastSaveToLastCommit": false,
+        "submoduleRecurseCheckout": false,
+        "gitDir": "https://github.com/masoudshafizadeh028-dev/PerShiaA-osint.git",
+        "showFileMenu": true,
+        "authorInHistoryView": "full",
+        "dateInHistoryView": true,
+        "diffStyle": "split",
+        "hunks": {
+            "showSigns": false,
+            "hunkCommands": false,
+            "statusBar": "disabled"
+        },
+        "lineAuthor": {
+            "show": false,
+            "followMovement": "inactive",
+            "authorDisplay": "initials",
+            "showCommitHash": false,
+            "dateTimeFormatOptions": "date",
+            "dateTimeFormatCustomString": "YYYY-MM-DD HH:mm",
+            "dateTimeTimezone": "viewer-local",
+            "coloringMaxAge": "1y",
+            "colorNew": {
+                "r": 255,
+                "g": 150,
+                "b": 150
+            },
+            "colorOld": {
+                "r": 120,
+                "g": 160,
+                "b": 255
+            },
+            "textColorCss": "var(--text-muted)",
+            "ignoreWhitespace": false,
+            "lastShownAuthorDisplay": "initials",
+            "lastShownDateTimeFormatOptions": "date"
+        }
+    },
+    "pluginVersion": "2.39.0"
+}# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
