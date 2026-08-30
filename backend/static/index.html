@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد PerShiaA-OSINT</title>
+    <script src="/cytoscape.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Reyhan';
+            src: url('/fonts/Reyhan-Regular.ttf') format('truetype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Reyhan';
+            src: url('/fonts/Reyhan-Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+        @font-face {
+            font-family: 'Sorena';
+            src: url('/fonts/Sorena.ttf') format('truetype');
+        }
+
+        :root {
+            --bg-main: #0a0a0f;
+            --bg-panel: #151520;
+            --accent: #00ffcc;
+            --accent-hover: #00e6b8;
+            --danger: #ff3366;
+            --text-main: #ffffff;
+            --text-muted: #8a9ab0;
+            --border-color: #2a2a3a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Reyhan', 'Sorena', Tahoma, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+            font-family: 'Sorena', sans-serif;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: 0.2rem;
+        }
+
+        .badge {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            color: var(--accent);
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            direction: ltr;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        input::placeholder {
+            text-align: right;
+            direction: rtl;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent);
+            color: black;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .logs-container {
+            margin-top: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logs-box {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 250px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            direction: ltr; /* Keep logs LTR as they often contain code/english */
+            text-align: left;
+        }
+
+        .log-entry {
+            color: #d1d5db;
+        }
+
+        .log-arrow {
+            color: var(--accent);
+            margin-right: 0.5rem;
+        }
+
+        .pulsing {
+            color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        #cy {
+            width: 100%;
+            height: 400px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            position: relative;
+        }
+
+        .waiting-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .summary-panel {
+            margin-top: 1.5rem;
+            display: none;
+        }
+        
+        .summary-panel.visible {
+            display: flex;
+        }
+
+        .summary-panel h2 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-panel p {
+            color: #d1d5db;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <div class="title">پلتفرم PerShiaA-OSINT</div>
+            <div class="subtitle">سیستم اطلاعاتی و اوسینت مبتنی بر هوش مصنوعی چندعامله</div>
+        </div>
+        <div class="badge">v1.0.0-MVP</div>
+    </header>
+
+    <div class="layout">
+        <!-- Control Panel -->
+        <div class="panel">
+            <h2>تحقیقات جدید</h2>
+            <form id="osint-form">
+                <div class="form-group">
+                    <label>هدف (ایمیل، تلفن، دامنه یا نام کاربری)</label>
+                    <input type="text" id="target-input" placeholder="مثال: john.doe@example.com" required>
+                </div>
+                <button type="submit">استقرار و اجرای ایجنت‌ها</button>
+            </form>
+
+            <div class="logs-container">
+                <label style="font-weight: bold; font-size: 1rem;">گزارش لحظه‌ای سیستم</label>
+                <div class="logs-box" id="logs-box">
+                    <div class="log-entry" style="color: var(--text-muted)">System is ready for deployment...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization Panel -->
+        <div style="display: flex; flex-direction: column;">
+            <div class="panel">
+                <h2>گراف ارتباطی و هویتی (Maltego-style)</h2>
+                <div id="cy">
+                    <div class="waiting-text" id="waiting-text">در انتظار دریافت داده‌ها از ایجنت‌ها...</div>
+                </div>
+            </div>
+
+            <div class="panel summary-panel" id="summary-panel">
+                <h2>خلاصه اجرایی (Executive Summary)</h2>
+                <p id="summary-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('osint-form');
+        const targetInput = document.getElementById('target-input');
+        const logsBox = document.getElementById('logs-box');
+        const waitingText = document.getElementById('waiting-text');
+        const summaryPanel = document.getElementById('summary-panel');
+        const summaryText = document.getElementById('summary-text');
+        
+        let cy = null;
+
+        function addLog(message, isPulse = false) {
+            const div = document.createElement('div');
+            div.className = isPulse ? 'log-entry pulsing' : 'log-entry';
+            if (isPulse) {
+                div.id = 'pulsing-log';
+                div.innerText = message;
+            } else {
+                div.innerHTML = `<span class="log-arrow">›</span>${message}`;
+            }
+            logsBox.appendChild(div);
+            logsBox.scrollTop = logsBox.scrollHeight;
+        }
+
+        function removePulsingLog() {
+            const el = document.getElementById('pulsing-log');
+            if (el) el.remove();
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const target = targetInput.value.trim();
+            if (!target) return;
+
+            // Reset UI
+            logsBox.innerHTML = '';
+            waitingText.style.display = 'block';
+            summaryPanel.classList.remove('visible');
+            if (cy) {
+                cy.destroy();
+                cy = null;
+            }
+
+            addLog("[System] Initializing OSINT Multi-Agent Framework...");
+            addLog("... Agents are working ...", true);
+
+            try {
+                const res = await fetch('/api/investigate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, target_type: 'auto' })
+                });
+                
+                const data = await res.json();
+                const taskId = data.task_id;
+
+                let lastLogCount = 0;
+                
+                const interval = setInterval(async () => {
+                    const statusRes = await fetch(`/api/status/${taskId}`);
+                    const statusData = await statusRes.json();
+                    
+                    if (statusData.logs.length > lastLogCount) {
+                        removePulsingLog();
+                        for (let i = lastLogCount; i < statusData.logs.length; i++) {
+                            addLog(statusData.logs[i]);
+                        }
+                        lastLogCount = statusData.logs.length;
+                        
+                        if (statusData.status !== 'completed') {
+                            addLog("... Agents are working ...", true);
+                        }
+                    }
+
+                    if (statusData.status === 'completed') {
+                        clearInterval(interval);
+                        removePulsingLog();
+                        addLog("[System] Investigation complete.");
+                        
+                        // Fake translation to Persian for the mock summary
+                        let persianSummary = "تحقیقات انجام شده روی هدف نشان می‌دهد که این آدرس به یک حساب کاربری شناخته شده در پلتفرم GitHub مرتبط است. بررسی‌های بیشتر حاکی از نشت اطلاعات (شامل رمز عبور) در دیتابیس‌های دارک‌وب (مانند DeHashed) است. همچنین تحلیل سوابق ریپازیتوری‌ها، یک آدرس IP عمومی که پیش‌تر استفاده شده بود را افشا کرد.";
+                        
+                        renderGraph(statusData.result, persianSummary);
+                    }
+                }, 1000);
+
+            } catch (error) {
+                removePulsingLog();
+                addLog(`[Error] Failed to communicate with API: ${error.message}`);
+            }
+        });
+
+        function renderGraph(result, persianSummary) {
+            waitingText.style.display = 'none';
+            summaryPanel.classList.add('visible');
+            summaryText.innerText = persianSummary || result.summary;
+
+            cy = cytoscape({
+                container: document.getElementById('cy'),
+                elements: {
+                    nodes: result.nodes,
+                    edges: result.edges
+                },
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'background-color': '#00ffcc',
+                            'label': 'data(label)',
+                            'color': '#fff',
+                            'text-valign': 'bottom',
+                            'text-margin-y': 5,
+                            'font-size': '12px',
+                            'font-family': 'Tahoma, sans-serif'
+                        }
+                    },
+                    {
+                        selector: 'node[type="target"]',
+                        style: { 'background-color': '#ff3366', 'width': 40, 'height': 40 }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 2,
+                            'line-color': '#2a2a3a',
+                            'target-arrow-color': '#2a2a3a',
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier',
+                            'label': 'data(label)',
+                            'font-size': '11px',
+                            'color': '#8a9ab0',
+                            'text-background-opacity': 1,
+                            'text-background-color': '#0a0a0f',
+                            'font-family': 'Tahoma, sans-serif'
+                        }
+                    }
+                ],
+                layout: { name: 'cose', padding: 30 }
+            });
+        }
+    </script>
+</body>
+</html>
