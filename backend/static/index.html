@@ -233,11 +233,63 @@
             margin-bottom: 0.5rem;
         }
 
+        /* Keep summary-panel styles and insert new ones before them */
         .summary-panel p {
             color: #d1d5db;
             font-size: 1.05rem;
             line-height: 1.8;
             text-align: justify;
+        }
+
+        .advanced-options {
+            margin-bottom: 1.5rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .advanced-options h3 {
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 0.8rem;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #d1d5db;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.6rem;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            direction: rtl;
         }
     </style>
 </head>
@@ -260,6 +312,37 @@
                     <label>هدف (ایمیل، تلفن، دامنه یا نام کاربری)</label>
                     <input type="text" id="target-input" placeholder="مثال: john.doe@example.com" required>
                 </div>
+
+                <div class="advanced-options">
+                    <h3>⚙️ ماژول‌های تحلیل OSINT</h3>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mod-github" value="github" checked>
+                            <span>ردپای گیت‌هاب</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mod-dns" value="dns" checked>
+                            <span>تحلیل شبکه و DNS</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mod-darkweb" value="darkweb" checked>
+                            <span>نشت اطلاعات (Dark Web)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mod-identity" value="identity" checked>
+                            <span>مکان‌یابی هویت (Identity)</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label style="margin-bottom: 5px;">عمق پردازش:</label>
+                        <select id="scan-depth">
+                            <option value="overview">سطحی (سریع)</option>
+                            <option value="professional" selected>حرفه‌ای (هوشمند - پیشنهاد سیستم)</option>
+                            <option value="academic">عمیق (جستجوی کامل)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <button type="submit">استقرار و اجرای ایجنت‌ها</button>
             </form>
 
@@ -320,6 +403,15 @@
             const target = targetInput.value.trim();
             if (!target) return;
 
+            // Collect selected modules
+            const modules = [];
+            if(document.getElementById('mod-github').checked) modules.push('github');
+            if(document.getElementById('mod-dns').checked) modules.push('dns');
+            if(document.getElementById('mod-darkweb').checked) modules.push('darkweb');
+            if(document.getElementById('mod-identity').checked) modules.push('identity');
+            
+            const depth = document.getElementById('scan-depth').value;
+
             // Reset UI
             logsBox.innerHTML = '';
             waitingText.style.display = 'block';
@@ -329,7 +421,8 @@
                 cy = null;
             }
 
-            addLog("[System] Initializing OSINT Multi-Agent Framework...");
+            addLog(`[System] Initializing Framework | Depth: ${depth.toUpperCase()}`);
+            addLog(`[System] Active Modules: ${modules.join(', ')}`);
             addLog("... Agents are working ...", true);
 
             try {
@@ -337,7 +430,12 @@
                 const res = await fetch(`${baseUrl}/api/investigate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ target, target_type: 'auto' })
+                    body: JSON.stringify({ 
+                        target: target, 
+                        target_type: 'auto',
+                        modules: modules,
+                        depth: depth
+                    })
                 });
                 
                 if (!res.ok) {
