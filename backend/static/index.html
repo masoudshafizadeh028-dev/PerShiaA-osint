@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>داشبورد PerShiaA-OSINT</title>
-    <script src="/cytoscape.min.js"></script>
+    <script src="cytoscape.min.js"></script>
     <style>
         @font-face {
             font-family: 'Reyhan';
-            src: url('/fonts/Reyhan-Regular.ttf') format('truetype');
+            src: url('fonts/Reyhan-Regular.ttf') format('truetype');
             font-weight: normal;
         }
         @font-face {
             font-family: 'Reyhan';
-            src: url('/fonts/Reyhan-Bold.ttf') format('truetype');
+            src: url('fonts/Reyhan-Bold.ttf') format('truetype');
             font-weight: bold;
         }
         @font-face {
             font-family: 'Sorena';
-            src: url('/fonts/Sorena.ttf') format('truetype');
+            src: url('fonts/Sorena.ttf') format('truetype');
         }
 
         :root {
@@ -333,11 +333,16 @@
             addLog("... Agents are working ...", true);
 
             try {
-                const res = await fetch('/api/investigate', {
+                const baseUrl = window.location.origin;
+                const res = await fetch(`${baseUrl}/api/investigate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ target, target_type: 'auto' })
                 });
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
                 
                 const data = await res.json();
                 const taskId = data.task_id;
@@ -345,7 +350,9 @@
                 let lastLogCount = 0;
                 
                 const interval = setInterval(async () => {
-                    const statusRes = await fetch(`/api/status/${taskId}`);
+                    const statusRes = await fetch(`${baseUrl}/api/status/${taskId}`);
+                    if (!statusRes.ok) return;
+                    
                     const statusData = await statusRes.json();
                     
                     if (statusData.logs.length > lastLogCount) {
